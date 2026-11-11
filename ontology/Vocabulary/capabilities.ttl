@@ -1,0 +1,452 @@
+@prefix lab:  <https://smartproductionlab.aau.dk/semantics/> .
+@prefix css:  <http://www.w3id.org/hsu-aut/css#> .
+@prefix pprl: <https://w3id.org/2025/pprl#> .
+@prefix vdi2860: <http://www.w3id.org/hsu-aut/VDI2860#> .
+@prefix din8580: <http://www.w3id.org/hsu-aut/DIN8580#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# The shared capability vocabulary of the lab's filling lines.
+#
+# A capability and each of its properties has one meaning, named by an
+# IRI below https://smartproductionlab.aau.dk/semantics/. A module's
+# offered capability (module spec, Capability Description of its AAS)
+# and a product's required capability (the process planner) carry the
+# same IRI as supplemental semanticId; that is what lets them be
+# matched. Capabilities are classes below css:Capability, their
+# properties classes below css:Property.
+#
+# The names are those of the process planner's examples (vial,
+# prefilled syringe, cartridge).
+#
+# For planning, a capability states what it needs, does and keeps
+# (PPRL's pre, post and invariant) on properties of a resource
+# (Referenced, Tared) and of the product (ContentVolume, Weighed,
+# Stoppered, ...); a component's capability is realized by a primitive
+# skill (lab:realizes on the skill type). A property can be the rate of
+# another (lab:rateOf): a capability that has it changes the other
+# steadily from its start to its end (a dose at its flow rate, an axis
+# at its speed). The container's geometry, as the product states it
+# (InnerDiameter, InnerBottomHeight and RimHeight above the face it
+# stands on), and where a module's nest puts that face (NestPosition)
+# give how deep the outlet is in the liquid (OutletImmersion).
+# BottomUpFilling is a Filling that keeps OutletImmersion between the
+# product's MinImmersion and MaxImmersion. What changes the product is
+# placed below DIN 8580, what moves or checks it below VDI 2860.
+#################################################################
+
+<https://smartproductionlab.aau.dk/semantics>
+  rdf:type owl:Ontology ;
+  owl:versionInfo "0.10" ;
+  owl:imports <http://www.w3id.org/hsu-aut/css> ;
+  owl:imports <https://w3id.org/2025/pprl> ;
+  owl:imports <http://www.w3id.org/hsu-aut/VDI2860> ;
+  owl:imports <http://www.w3id.org/hsu-aut/DIN8580> ;
+  rdfs:comment "Capabilities and capability properties of aseptic filling lines for vials, prefilled syringes and cartridges (AAU Smart Production Lab)." .
+
+lab:unit rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The unit the values of a property are given in (as written in the AAS)." .
+
+lab:valueType rdf:type owl:AnnotationProperty ;
+  rdfs:comment "The kind of value a property takes: number, string or boolean." .
+
+lab:characterizes rdf:type owl:AnnotationProperty ;
+  rdfs:comment "A capability this property describes." .
+
+lab:contributes rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a skill type (Skills vocabulary): the capability a skill of this type brings to a skill that runs it as a step. A module's offered capabilities are derived from it: a composite skill offers the process capabilities its steps contribute." .
+
+lab:realizes rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a skill type (Skills vocabulary): the capability of its component a primitive of this type realizes, with what that capability needs, does and keeps (0.2). It is a part of the module's capabilities, never offered on its own." .
+
+lab:rateOf rdf:type owl:AnnotationProperty ;
+  rdfs:comment "Said of a property: how fast another property changes, per second. A capability that has it and changes the other changes it steadily at that rate, from its start to its end, and runs as long as the change takes (0.10)." .
+
+
+#################################################################
+# Capabilities
+#
+# Two kinds. A process capability is what a product's process can
+# require: it changes or checks the product. An auxiliary capability
+# serves other skills (moving an axis, weighing); it is offered only
+# through the skills that use it and never required by a product.
+# Across both kinds, what a capability is a kind of in the standards:
+# DIN 8580 for what changes the product, VDI 2860 for what moves or
+# checks it.
+#################################################################
+
+lab:ProcessCapability rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  rdfs:label "Process capability" ;
+  rdfs:comment "A capability a product's process can require: it changes or checks the product." .
+
+lab:AuxiliaryCapability rdf:type owl:Class ; rdfs:subClassOf css:Capability ;
+  owl:disjointWith lab:ProcessCapability ;
+  rdfs:label "Auxiliary capability" ;
+  rdfs:comment "A capability that serves other skills: offered only through the skills that use it, never required by a product." .
+
+lab:Positioning rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Positionieren ;
+  rdfs:label "Positioning" ; rdfs:comment "Move an axis to a position measured from its reference." ;
+  pprl:pre  [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Position ; pprl:expression "given" ] .
+
+lab:Referencing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Referencing" ; rdfs:comment "Move an axis to its reference, where its position is known." ;
+  pprl:post [ pprl:onProperty lab:Referenced ; pprl:expression "= true" ] ,
+            [ pprl:onProperty lab:Position ; pprl:expression "= 0.0" ] .
+
+lab:Dosing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Einfuellen ;
+  rdfs:label "Dosing" ; rdfs:comment "Deliver a volume of liquid through a pump's outlet, into the container." ;
+  pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "+= Volume" ] ,
+            [ pprl:onProperty lab:Weighed ; pprl:expression "= false" ] .
+
+lab:Weighing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Messen ;
+  rdfs:label "Weighing" ; rdfs:comment "Weigh what is on a scale." ;
+  pprl:pre  [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Weight ; pprl:expression "measured" ] ,
+            [ pprl:onProperty lab:Weighed ; pprl:expression "= true" ] .
+
+lab:Taring rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Taring" ; rdfs:comment "Set a scale to zero." ;
+  pprl:post [ pprl:onProperty lab:Tared ; pprl:expression "= true" ] .
+
+lab:Pressing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Fuegen_durch_Presspassung ;
+  rdfs:label "Pressing" ; rdfs:comment "Press a stopper into the container with a piston." ;
+  pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
+
+lab:Crimping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , din8580:Fuegen_durch_Umformen_bei_Blech-_Rohr-_und_Profilteilen ;
+  rdfs:label "Crimping" ; rdfs:comment "Crimp a cap onto the container." ;
+  pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
+
+lab:Transporting rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Foerdern ;
+  rdfs:label "Transporting" ; rdfs:comment "Carry a container on a shuttle of the planar table to a pose on the table (X, Y in mm, Rz in degrees, in the table's frame): from one module's transfer point to the next. Only the resource that has the container in its custody carries it (0.7)." ;
+  pprl:pre [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] .
+
+lab:Receiving rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Receiving" ; rdfs:comment "Take a container into custody: a shuttle that will carry it, a gripper that will hold it. From then on the resource has it until Releasing, and has room for that many fewer (0.7)." ;
+  pprl:pre  [ pprl:onProperty lab:Occupancy ; pprl:expression "< Capacity" ] ;
+  pprl:post [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] .
+
+lab:Releasing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability ;
+  rdfs:label "Releasing" ; rdfs:comment "Give up the custody of a container, once it is handed on or taken off (0.7)." ;
+  pprl:pre  [ pprl:onProperty lab:Holding ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Holding ; pprl:expression "= false" ] .
+
+lab:Imaging rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:AuxiliaryCapability , vdi2860:Pruefen ;
+  rdfs:label "Imaging" ; rdfs:comment "Take an image of the container and judge it." ;
+  pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
+
+lab:Unpacking rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+  rdfs:label "Unpacking" ; rdfs:comment "Take containers out of their packaging." .
+
+lab:Loading rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+  rdfs:label "Loading" ; rdfs:comment "Place a container on the carrier that takes it through the line." .
+
+lab:Filling rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Einfuellen ;
+  rdfs:label "Filling" ; rdfs:comment "Fill a volume of liquid into an open container." ;
+  pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "= 0.0" ] ;
+  pprl:post [ pprl:onProperty lab:ContentVolume ; pprl:expression "= FillVolume" ] .
+
+lab:BottomUpFilling rdf:type owl:Class ; rdfs:subClassOf lab:Filling ;
+  rdfs:label "Bottom-up filling" ;
+  rdfs:comment "Fill from the bottom of the container up: the needle starts deep in it and rises with the liquid while it flows, its tip never more than MinImmersion above the surface (the liquid would fall and foam) nor more than MaxImmersion below it (the needle would be wetted), so that no air is trapped (prefilled syringes, cartridges). What holds of Filling holds of it; the bounds are the product's (0.10)." ;
+  pprl:invariant [ pprl:onProperty lab:OutletImmersion ; pprl:expression ">= MinImmersion" ] ,
+                 [ pprl:onProperty lab:OutletImmersion ; pprl:expression "<= MaxImmersion" ] .
+
+lab:Stoppering rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Fuegen_durch_Presspassung ;
+  rdfs:label "Stoppering" ; rdfs:comment "Place a stopper on a filled container and press it in." ;
+  pprl:pre  [ pprl:onProperty lab:ContentVolume ; pprl:expression "> 0.0" ] ;
+  pprl:post [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] .
+
+lab:Capping rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , din8580:Fuegen ;
+  rdfs:label "Capping" ; rdfs:comment "Put a cap on a stoppered container and fasten it." ;
+  pprl:pre  [ pprl:onProperty lab:Stoppered ; pprl:expression "= true" ] ;
+  pprl:post [ pprl:onProperty lab:Capped ; pprl:expression "= true" ] .
+
+lab:Inspection rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability , vdi2860:Pruefen ;
+  rdfs:label "Inspection" ; rdfs:comment "Inspect a container and decide whether it passes." ;
+  pprl:post [ pprl:onProperty lab:Inspected ; pprl:expression "= true" ] .
+
+lab:Unloading rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+  rdfs:label "Unloading" ; rdfs:comment "Take a container off its carrier." .
+
+lab:Packing rdf:type owl:Class ; rdfs:subClassOf css:Capability , lab:ProcessCapability ;
+  rdfs:label "Packing" ; rdfs:comment "Put finished containers into their packaging." .
+
+
+#################################################################
+# Properties
+#################################################################
+
+lab:ContainerType rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Container type" ; lab:valueType "string" ;
+  rdfs:comment "The kind of primary container: vial, syringe or cartridge." ;
+  lab:characterizes lab:Loading , lab:Filling , lab:Stoppering , lab:Capping , lab:Inspection , lab:Unloading .
+
+lab:GraspDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Grasp diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Outer diameter of the container where it is held." ;
+  lab:characterizes lab:Loading , lab:Filling , lab:Stoppering , lab:Capping , lab:Inspection , lab:Unloading .
+
+lab:TargetX rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target X" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where a container is carried to along the planar table's X axis, in the table's frame." ;
+  lab:characterizes lab:Transporting .
+
+lab:TargetY rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target Y" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where a container is carried to along the planar table's Y axis, in the table's frame." ;
+  lab:characterizes lab:Transporting .
+
+lab:TargetRz rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Target Rz" ; lab:valueType "number" ; lab:unit "deg" ;
+  rdfs:comment "How the shuttle carrying a container is turned about Z when it arrives, in the table's frame." ;
+  lab:characterizes lab:Transporting .
+
+lab:FillVolume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Fill volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "Volume of liquid filled into one container in one filling." ;
+  lab:characterizes lab:Filling .
+
+lab:AbsoluteFillError rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Absolute fill error" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "Largest deviation of the filled volume from the fill volume." ;
+  lab:characterizes lab:Filling .
+
+lab:StopperDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Stopper diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Diameter of the stopper that is placed." ;
+  lab:characterizes lab:Stoppering .
+
+lab:CapDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Cap diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Diameter of the cap that is put on." ;
+  lab:characterizes lab:Capping .
+
+lab:Position rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where an axis is, or is to go, measured from its reference." ;
+  lab:characterizes lab:Positioning , lab:Referencing .
+
+lab:Referenced rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Referenced" ; lab:valueType "boolean" ;
+  rdfs:comment "An axis knows where it is: it has been at its reference since it was switched on." ;
+  lab:characterizes lab:Positioning , lab:Referencing .
+
+lab:FillPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Fill position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the needle is in the container: the position of the axis at which a pump doses into it." ;
+  lab:characterizes lab:Dosing .
+
+lab:PressPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Press position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the press meets the stopper in the container: the position of the axis at which a stopper is pressed in." ;
+  lab:characterizes lab:Pressing .
+
+lab:CrimpPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Crimp position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the crimping head closes around the cap: the position of the axis at which a cap is crimped on (0.8)." ;
+  lab:characterizes lab:Crimping .
+
+lab:Volume rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "A volume a pump delivers in one dose." ;
+  lab:characterizes lab:Dosing .
+
+lab:FlowRate rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Flow rate" ; lab:valueType "number" ; lab:unit "mL/s" ;
+  rdfs:comment "How fast a pump delivers liquid; a setting of the station, not asked for by a product." ;
+  lab:characterizes lab:Dosing ; lab:rateOf lab:ContentVolume .
+
+lab:Speed rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Speed" ; lab:valueType "number" ; lab:unit "mm/s" ;
+  rdfs:comment "How fast an axis moves (0.10)." ;
+  lab:characterizes lab:Positioning , lab:Referencing ; lab:rateOf lab:Position .
+
+lab:NestPosition rdf:type owl:Class ; rdfs:subClassOf css:Property , lab:Position ;
+  rdfs:label "Nest position" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Where the face a container stands on in its nest is, along an axis over it: the position of the axis at which the tool's tip would touch it (0.10)." ;
+  lab:characterizes lab:Dosing , lab:Positioning .
+
+lab:InsertDepth rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Insert depth" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far below a container's rim an outlet has to be for what it delivers to go into the container (0.10)." ;
+  lab:characterizes lab:Dosing .
+
+lab:BottomClearance rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Bottom clearance" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far above a container's inner bottom a tool's tip has to stay (0.10)." ;
+  lab:characterizes lab:Positioning .
+
+lab:MinImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Least immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "The least OutletImmersion a product allows while it is filled from the bottom: negative, the most the tip may be above the liquid (0.10)." ;
+  lab:characterizes lab:BottomUpFilling .
+
+lab:MaxImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Greatest immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "The greatest OutletImmersion a product allows while it is filled from the bottom: how deep the tip may be in the liquid (0.10)." ;
+  lab:characterizes lab:BottomUpFilling .
+
+lab:Weight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Weight" ; lab:valueType "number" ; lab:unit "g" ;
+  rdfs:comment "What a scale reads." ;
+  lab:characterizes lab:Weighing .
+
+lab:Tared rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Tared" ; lab:valueType "boolean" ;
+  rdfs:comment "A scale reads zero for what it carried when it was tared." ;
+  lab:characterizes lab:Weighing , lab:Taring .
+
+lab:FillWeight rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Fill weight" ; lab:valueType "number" ; lab:unit "g" ;
+  rdfs:comment "The weight of the container after filling, for the batch record: a result of filling." ;
+  lab:characterizes lab:Filling ;
+  pprl:knownWhen [ pprl:onProperty lab:Weighed ; pprl:expression "= true" ] .
+
+
+# Properties of the product: a process changes or checks them -----------------
+
+# The container's geometry: what a module needs to know where the
+# container's rim, its inner bottom and its liquid's surface are. Heights
+# are above the face the container stands on in its nest.
+
+lab:InnerDiameter rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inner diameter" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Inner diameter of the container where it holds the liquid (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing .
+
+lab:InnerBottomHeight rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inner bottom height" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Height of the container's inner bottom above the face it stands on (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing , lab:Positioning .
+
+lab:RimHeight rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Rim height" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "Height of the container's rim above the face it stands on (0.10)." ;
+  lab:characterizes lab:Filling , lab:Dosing .
+
+lab:OutletImmersion rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Outlet immersion" ; lab:valueType "number" ; lab:unit "mm" ;
+  rdfs:comment "How far the outlet a liquid is dosed through is below the liquid's surface in the container, negative when it is above it. A module states how it follows from where its axis is, the container's geometry and its content; defined only while it doses (0.10)." ;
+  lab:characterizes lab:Dosing , lab:BottomUpFilling .
+
+lab:HeldBy rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Held by" ; lab:valueType "string" ;
+  rdfs:comment "The resource that has the container in its custody (the idShort of its AAS), empty if none: the container's side of Holding (0.7)." .
+
+lab:Holding rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Holding" ; lab:valueType "boolean" ;
+  rdfs:comment "The resource has the container the step is for in its custody: it carries or holds it, or has agreed to receive it. The container's HeldBy names the resource (0.7)." ;
+  lab:characterizes lab:Transporting , lab:Receiving , lab:Releasing .
+
+lab:Occupancy rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Occupancy" ; lab:valueType "number" ;
+  rdfs:comment "How many containers the resource has in its custody now (0.7)." ;
+  lab:characterizes lab:Receiving .
+
+lab:Capacity rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Capacity" ; lab:valueType "number" ;
+  rdfs:comment "How many containers the resource can have in its custody at once: one for a shuttle (0.7)." ;
+  lab:characterizes lab:Receiving .
+
+lab:ContentVolume rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Content volume" ; lab:valueType "number" ; lab:unit "mL" ;
+  rdfs:comment "The volume of liquid in the container." ;
+  lab:characterizes lab:Dosing , lab:Filling , lab:Stoppering .
+
+lab:Weighed rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Weighed" ; lab:valueType "boolean" ;
+  rdfs:comment "The container has been weighed since it was last filled." ;
+  lab:characterizes lab:Dosing , lab:Weighing .
+
+lab:Stoppered rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Stoppered" ; lab:valueType "boolean" ;
+  rdfs:comment "A stopper is pressed into the container." ;
+  lab:characterizes lab:Pressing , lab:Stoppering , lab:Capping .
+
+lab:Capped rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Capped" ; lab:valueType "boolean" ;
+  rdfs:comment "A cap is crimped onto the container." ;
+  lab:characterizes lab:Crimping , lab:Capping .
+
+lab:Inspected rdf:type owl:Class ; rdfs:subClassOf css:Property , pprl:ProductProperty ;
+  rdfs:label "Inspected" ; lab:valueType "boolean" ;
+  rdfs:comment "The container has been inspected." ;
+  lab:characterizes lab:Imaging , lab:Inspection .
+
+lab:InspectionMethod rdf:type owl:Class ; rdfs:subClassOf css:Property ;
+  rdfs:label "Inspection method" ; lab:valueType "string" ;
+  rdfs:comment "How the container is inspected, e.g. vision." ;
+  lab:characterizes lab:Inspection .
+
+
+#################################################################
+# Points of interest of a module
+#
+# A point is a place on a module where something happens to a product:
+# a coordinate of the module's Operational Data, relative to
+# the module's base, whose supplemental semanticId is one of these. Its
+# pose in the planar table's frame follows from the coordinates it is
+# relative to.
+#################################################################
+
+lab:PointOfInterest rdf:type owl:Class ;
+  rdfs:label "Point of interest" ;
+  rdfs:comment "A place on a module, stated by its pose in the module's frame, where something happens to a product." .
+
+lab:TransferPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Transfer point" ;
+  rdfs:comment "Where a shuttle stands to hand a container to the module and to take it back: the target of the shuttle's move, in the planar table's frame." .
+
+lab:ProcessingPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Processing point" ;
+  rdfs:comment "Where the module's process acts on the container: where the needle enters, where the press comes down." .
+
+lab:PickPoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Pick point" ;
+  rdfs:comment "Where a robot or gripper takes a container or a part from." .
+
+lab:PlacePoint rdf:type owl:Class ; rdfs:subClassOf lab:PointOfInterest ;
+  rdfs:label "Place point" ;
+  rdfs:comment "Where a robot or gripper puts a container or a part down." .
+
+
+#################################################################
+# Parts of the planar table
+#################################################################
+
+lab:Flyway rdf:type owl:Class ;
+  rdfs:label "Flyway" ;
+  rdfs:comment "A tile of a planar motor table, 240 mm square, that the shuttles levitate over: a co-managed Node of the table's Hierarchical Structures, and a coordinate at the tile's centre relative to the table's base. The flyways that are there are the table's layout; a place without one is a hole." .
+
+
+#################################################################
+# What a coordinate is of
+#
+# A coordinate says where something is relative to another
+# coordinate; these are its meanings, besides the points of interest
+# and the flyways. The tree is rooted at the planar table's base.
+#################################################################
+
+lab:TableBase rdf:type owl:Class ;
+  rdfs:label "Table base" ;
+  rdfs:comment "The origin of the planar table, the corner its shuttles' positions are measured from: the root of the coordinates of a line." .
+
+lab:ModuleBase rdf:type owl:Class ;
+  rdfs:label "Module base" ;
+  rdfs:comment "The origin of a module: the middle of its front, at the table's height, Y out of the front, Z up. Its points and mounts are relative to it." .
+
+lab:Mount rdf:type owl:Class ;
+  rdfs:label "Mount" ;
+  rdfs:comment "Where a moving part is fixed to its module, as it stands at its zero: the coordinate the moving part's own coordinate is relative to." .
+
+lab:EndEffector rdf:type owl:Class ;
+  rdfs:label "End effector" ;
+  rdfs:comment "The tool point of a moving part (the needle's tip, the press head, a gripper): relative to its mount, the value that moves following the part's measured position." .
+
+lab:Mover rdf:type owl:Class ;
+  rdfs:label "Mover" ;
+  rdfs:comment "A shuttle of the planar table (an xbot): relative to the table's base, its X, Y and Yaw following the controller's measured pose." .

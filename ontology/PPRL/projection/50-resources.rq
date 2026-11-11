@@ -1,0 +1,34 @@
+# A shell with skills or offered capabilities describes a resource: it provides the skills and the
+# capabilities its own submodels describe. A skill whose Deployment is Described is in
+# the AAS only: the program does not carry it out yet, so it is offered after a reconfiguration.
+PREFIX pa:   <https://w3id.org/2025/pprl/aas#>
+PREFIX pprl: <https://w3id.org/2025/pprl#>
+PREFIX css:  <http://www.w3id.org/hsu-aut/css#>
+
+CONSTRUCT {
+  ?shell pprl:describes ?resource .
+  ?resource a css:Resource ; css:providesSkill ?skill ; css:providesCapability ?capability .
+  ?described a pprl:DescribedSkill .
+}
+WHERE {
+  {
+    ?shell pa:submodel ?submodel .
+    ?submodel pa:element+ ?element .
+    ?element pprl:describes ?skill .
+    ?skill a css:Skill .
+  }
+  UNION
+  {
+    ?shell pa:submodel ?submodel .
+    ?submodel pa:element+ ?element .
+    ?element pprl:describes ?capability .
+    ?capability a pprl:OfferedCapability .
+  }
+  UNION
+  {
+    ?skillElement pprl:describes ?described ; pa:element ?deployment .
+    ?described a css:Skill .
+    ?deployment pa:idShort "Deployment" ; pa:value "Described" .
+  }
+  BIND(IRI(CONCAT(STR(?shell), "#it")) AS ?resource)
+}
