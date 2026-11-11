@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# This repository
+aas/json/
+eval/results/deployment-cache/
