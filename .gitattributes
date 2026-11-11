@@ -1,0 +1,4 @@
+# LF everywhere: the FORTE patches are applied to LF sources in the container build.
+* text=auto eol=lf
+*.png binary
+*.pdf binary
