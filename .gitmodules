@@ -1,0 +1,4 @@
+[submodule "web-ui"]
+	path = web-ui
+	url = https://github.com/MartinJensen37/basyx-aas-web-ui.git
+	branch = feat/process-sequence-pharma
