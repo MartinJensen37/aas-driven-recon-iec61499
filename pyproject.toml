@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aas-driven-recon-iec61499"
+version = "1.0.0"
+description = "AAS-driven planning and online reconfiguration of IEC 61499 modules"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.9,<3",
+    "defusedxml>=0.7,<1",
+    "pyyaml>=6,<7",
+    "asyncua>=1.1,<3",
+    "rdflib>=7,<8",
+    "gtpyhop-core==2.0.2",
+    "basyx-python-sdk>=2.1,<3",
+    # The lab's pydantic AAS model (IDTA templates and the PPR types), at the commit the paper used.
+    "aas-model @ https://github.com/MartinJensen37/aas-model/archive/d6b3d0bffd9707e5b5959f9dcc713f73b3da012b.zip",
+]
+
+[project.optional-dependencies]
+eval = ["numpy>=2,<3", "matplotlib>=3.8,<4"]
+
+[project.scripts]
+modreg = "modreg.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
