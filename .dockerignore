@@ -1,0 +1,7 @@
+.git
+web-ui
+docs
+aas/json
+eval/results
+**/__pycache__
+**/*.egg-info
