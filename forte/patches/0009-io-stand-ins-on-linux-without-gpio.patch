@@ -1,0 +1,18 @@
+diff --git a/modules/iostubs/CMakeLists.txt b/modules/iostubs/CMakeLists.txt
+--- a/modules/iostubs/CMakeLists.txt
++++ b/modules/iostubs/CMakeLists.txt
+@@ -1,10 +1,11 @@
+ #*******************************************************************************
+ # Stand-ins for the Linux IO configuration blocks GPIOChip and PWMChip where those modules are
+-# not built (not Linux): same types, classes and header names, INIT answers QO = FALSE. So a
+-# block that contains one (an IO point that sets up its own line) is the same type everywhere.
++# not built (not Linux, or a Linux PC without GPIO): same types, classes and header names, INIT
++# answers QO = FALSE. So a block that contains one (an IO point that sets up its own line) is the
++# same type everywhere.
+ #
+ # SPDX-License-Identifier: EPL-2.0
+ #*******************************************************************************
+-if (LINUX)
++if (LINUX AND (FORTE_MODULE_GPIOCHIP OR FORTE_MODULE_PWMSYSFS))
+     return()
+ endif ()

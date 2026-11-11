@@ -1,0 +1,44 @@
+﻿# This file was generated using the 4DIAC FORTE Export Filter 3.2.0.202607081531!
+
+target_sources(forte-modlib PRIVATE
+        AContract_adp.cpp
+        AEquipment_adp.cpp
+        IO_AI_fbt.cpp
+        IO_AO_fbt.cpp
+        IO_DI_fbt.cpp
+        IO_DO_fbt.cpp
+        IO_RouteAI_fbt.cpp
+        IO_RouteAO_fbt.cpp
+        IO_RouteDI_fbt.cpp
+        IO_RouteDO_fbt.cpp
+        MOD_ActivityCount_fbt.cpp
+        MOD_OccupationIds_fbt.cpp
+        MOD_OccupationLogic_fbt.cpp
+        MOD_Occupation_fbt.cpp
+        MOD_OwnerLatch_fbt.cpp
+        MOD_OwnerView_fbt.cpp
+        MOD_StateGate_fbt.cpp
+        MOD_StateIds_fbt.cpp
+        MOD_StateLatch_fbt.cpp
+        MOD_StateLogic_fbt.cpp
+        MOD_StateManager_fbt.cpp
+        MOD_StateView_fbt.cpp
+        SKILL_Condition_BOOL_fbt.cpp
+        SKILL_Condition_LREAL_fbt.cpp
+        SKILL_Control_fbt.cpp
+        SKILL_Core_fbt.cpp
+        SKILL_FailMerge_fbt.cpp
+        SKILL_Gate_fbt.cpp
+        SKILL_Join2_fbt.cpp
+        SKILL_Join3_fbt.cpp
+        SKILL_Join4_fbt.cpp
+        SKILL_Merge_fbt.cpp
+        SKILL_NoEquipment_fbt.cpp
+        SKILL_Param_BOOL_fbt.cpp
+        SKILL_Param_DINT_fbt.cpp
+        SKILL_Param_INT_fbt.cpp
+        SKILL_Param_LREAL_fbt.cpp
+        SKILL_Param_UINT_fbt.cpp
+        SKILL_RunLogic_fbt.cpp
+        SKILL_Run_fbt.cpp
+)
